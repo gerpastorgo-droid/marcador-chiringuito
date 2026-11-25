@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="El Chiringuito · Marcador" />
+  <meta name="theme-color" content="#040d1d" />
+  <meta name="description" content="Marcador interactivo estilo El Chiringuito para 5 jugadores de fútbol diseñado para pantalla completa horizontal en iPad." />
+  <title>El Chiringuito · Marcador 5 Jugadores</title>
+  <style>
+    :root {
+      --navy-deep: #040d1d;
+      --navy-mid: #081c3a;
+      --navy-light: #0d2b57;
+      --royal-blue: #1565c0;
+      --electric-blue: #2994f2;
+      --gold-light: #ffe27a;
+      --gold-mid: #f2b422;
+      --gold-deep: #bc7508;
+      --white-broadcast: #f8fbff;
+      --text-secondary: rgba(219, 234, 254, 0.78);
+      --text-muted: rgba(147, 185, 232, 0.74);
+      --danger-soft: rgba(239, 68, 68, 0.18);
+      --bg-dim: 0.22;
+      --radius-card: clamp(14px, 1.6vw, 22px);
+      --radius-btn: clamp(10px, 1vw, 14px);
+      --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background-color: var(--navy-deep);
+    }
+
+    body {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background-color: transparent;
+      color: var(--white-broadcast);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+
+    /* ==========================================
+       FULLSCREEN BACKGROUND LAYERS (POSITIVE Z)
+       ========================================== */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 90% 62% at 50% -12%, rgba(33, 136, 229, 0.34) 0%, transparent 62%),
+        radial-gradient(ellipse 65% 48% at 50% 108%, rgba(242, 180, 34, 0.14) 0%, transparent 62%),
+        radial-gradient(ellipse 55% 55% at 10% 30%, rgba(16, 86, 172, 0.28) 0%, transparent 65%),
+        radial-gradient(ellipse 55% 55% at 90% 30%, rgba(16, 86, 172, 0.28) 0%, transparent 65%),
+        linear-gradient(180deg, #071834 0%, #040f24 55%, #030916 100%);
+    }
+
+    /* Subtle honeycomb hex mesh inspired by the El Chiringuito shield */
+    .bg-layer::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.22;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='98' viewBox='0 0 56 98'%3E%3Cg fill='none' stroke='%232994f2' stroke-opacity='0.34' stroke-width='1'%3E%3Cpath d='M28 0 L56 16.33 L56 49 L28 65.33 L0 49 L0 16.33 Z'/%3E%3Cpath d='M28 65.33 L56 81.66 L56 98 M0 98 L0 81.66 L28 65.33'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 46px 80px;
+      mask-image: radial-gradient(ellipse 85% 80% at 50% 45%, #000 15%, transparent 92%);
+      -webkit-mask-image: radial-gradient(ellipse 85% 80% at 50% 45%, #000 15%, transparent 92%);
+    }
+
+    /* Subtle studio floodlights */
+    .bg-layer::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        conic-gradient(from 195deg at 18% -12%, transparent 0deg, rgba(147, 210, 255, 0.08) 12deg, transparent 28deg),
+        conic-gradient(from 142deg at 82% -12%, transparent 0deg, rgba(255, 226, 122, 0.06) 12deg, transparent 28deg);
+    }
+
+    /* Custom uploaded background image — always strictly ABOVE bg-layer */
+    .bg-image {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .bg-image.has-image {
+      opacity: 1;
+    }
+
+    /* Controllable readability scrim */
+    .bg-scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: rgba(3, 10, 24, 0.16);
+      transition: background 0.18s ease;
+    }
+
+    body.has-custom-bg .bg-scrim {
+      background: rgba(3, 10, 24, var(--bg-dim, 0.22));
+    }
+
+    /* ==========================================
+       TOP-RIGHT EDIT TRIGGER
+       ========================================== */
+    .edit-trigger {
+      position: fixed;
+      top: max(env(safe-area-inset-top), 14px);
+      right: max(env(safe-area-inset-right), 18px);
+      z-index: 30;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(242, 180, 34, 0.45);
+      background: rgba(6, 20, 44, 0.72);
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      color: var(--gold-light);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.44),
+        inset 0 1px 0 rgba(255, 226, 122, 0.22);
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.14s ease, color 0.18s ease;
+      touch-action: manipulation;
+    }
+
+    .edit-trigger:hover {
+      background: rgba(11, 34, 70, 0.88);
+      border-color: rgba(255, 226, 122, 0.78);
+      color: #ffffff;
+    }
+
+    .edit-trigger:active {
+      transform: scale(0.95);
+    }
+
+    .edit-trigger svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+
+    .edit-trigger:hover svg {
+      transform: rotate(35deg);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ==========================================
+       MAIN STAGE + BRAND HEADER
+       ========================================== */
+    .stage {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(10px, 1.8vh, 20px);
+      padding:
+        max(env(safe-area-inset-top), clamp(12px, 2.2vh, 24px))
+        max(env(safe-area-inset-right), clamp(14px, 2.5vw, 38px))
+        max(env(safe-area-inset-bottom), clamp(14px, 2.4vh, 28px))
+        max(env(safe-area-inset-left), clamp(14px, 2.5vw, 38px));
+    }
+
+    .brand-header {
+      width: 100%;
+      max-width: 1560px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(14px, 2.4vw, 34px);
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    .brand-header[hidden] {
+      display: none;
+    }
+
+    .brand-line {
+      flex: 1 1 auto;
+      height: 2px;
+      max-width: 340px;
+      background: linear-gradient(90deg, transparent 0%, rgba(41, 148, 242, 0.55) 45%, rgba(242, 180, 34, 0.9) 100%);
+      border-radius: 2px;
+      box-shadow: 0 0 12px rgba(242, 180, 34, 0.25);
+    }
+
+    .brand-line.right {
+      background: linear-gradient(90deg, rgba(242, 180, 34, 0.9) 0%, rgba(41, 148, 242, 0.55) 55%, transparent 100%);
+    }
+
+    .brand-logo {
+      height: clamp(50px, 10.5vh, 92px);
+      width: auto;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.65));
+    }
+
+    /* ==========================================
+       5-PLAYER EL CHIRINGUITO BROADCAST ROW
+       ========================================== */
+    .players-grid {
+      width: 100%;
+      max-width: 1560px;
+      flex: 1 1 auto;
+      max-height: min(76vh, 620px);
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: clamp(10px, 1.6vw, 22px);
+      align-items: stretch;
+    }
+
+    body.logo-hidden .players-grid {
+      max-height: min(82vh, 670px);
+    }
+
+    .player-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(10px, 1.3vw, 18px);
+      border-radius: var(--radius-card);
+      background: linear-gradient(
+        180deg,
+        rgba(11, 34, 72, 0.78) 0%,
+        rgba(5, 16, 36, 0.88) 100%
+      );
+      backdrop-filter: blur(18px) saturate(145%);
+      -webkit-backdrop-filter: blur(18px) saturate(145%);
+      border: 1px solid rgba(41, 148, 242, 0.34);
+      box-shadow:
+        0 22px 44px rgba(0, 0, 0, 0.54),
+        inset 0 1px 0 rgba(255, 226, 122, 0.32),
+        inset 0 0 28px rgba(21, 101, 192, 0.14);
+      overflow: hidden;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    /* Metallic championship gold top bezel bar */
+    .player-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #8a5105 0%, #f2b422 28%, #fff0a8 50%, #f2b422 72%, #8a5105 100%);
+      pointer-events: none;
+    }
+
+    .player-card.pulse-up {
+      border-color: rgba(255, 226, 122, 0.78);
+      box-shadow:
+        0 22px 44px rgba(0, 0, 0, 0.56),
+        0 0 26px rgba(242, 180, 34, 0.28),
+        inset 0 1px 0 rgba(255, 226, 122, 0.55);
+    }
+
+    /* Portrait frame */
+    .portrait-wrap {
+      position: relative;
+      width: 100%;
+      flex: 1 1 40%;
+      min-height: 0;
+      border-radius: calc(var(--radius-card) - 6px);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 25%, rgba(41, 148, 242, 0.25) 0%, transparent 65%),
+        linear-gradient(175deg, #0d2b57 0%, #051329 100%);
+      border: 1px solid rgba(41, 148, 242, 0.28);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .portrait-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 18%;
+      display: block;
+    }
+
+    .portrait-img[hidden] {
+      display: none;
+    }
+
+    .portrait-default {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-top: 10%;
+      background-image:
+        radial-gradient(circle at 50% 24%, rgba(41, 148, 242, 0.24) 0%, transparent 62%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='70' viewBox='0 0 56 98'%3E%3Cg fill='none' stroke='%232994f2' stroke-opacity='0.22' stroke-width='1.2'%3E%3Cpath d='M28 0 L56 16.33 L56 49 L28 65.33 L0 49 L0 16.33 Z'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: cover, 28px 48px;
+    }
+
+    .portrait-default[hidden] {
+      display: none;
+    }
+
+    .portrait-default svg {
+      width: 78%;
+      height: 88%;
+      max-height: 100%;
+      display: block;
+    }
+
+    .portrait-wrap::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 28%;
+      background: linear-gradient(180deg, transparent 0%, rgba(5, 16, 36, 0.8) 100%);
+      pointer-events: none;
+    }
+
+    /* El Chiringuito signature skewed navy-and-gold nameplate ribbon */
+    .name-ribbon {
+      margin: clamp(8px, 1.3vh, 14px) 0 0;
+      padding: clamp(5px, 0.8vh, 8px) clamp(6px, 0.8vw, 10px);
+      background: linear-gradient(180deg, #0b244b 0%, #051329 100%);
+      border-top: 1.5px solid var(--gold-mid);
+      border-bottom: 1.5px solid var(--gold-deep);
+      border-left: 2.5px solid var(--gold-light);
+      border-right: 1px solid rgba(242, 180, 34, 0.45);
+      border-radius: 5px;
+      transform: skewX(-6deg);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.42);
+    }
+
+    .player-name {
+      margin: 0;
+      transform: skewX(6deg);
+      text-align: center;
+      font-size: clamp(0.84rem, 1.38vw, 1.26rem);
+      font-weight: 900;
+      font-style: italic;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.15;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.72);
+    }
+
+    /* Score Display */
+    .score-stage {
+      position: relative;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: clamp(6px, 1.2vh, 12px) 0 clamp(8px, 1.4vh, 14px);
+      padding: clamp(4px, 0.8vh, 10px) 0;
+      background: linear-gradient(90deg, transparent, rgba(41, 148, 242, 0.1), transparent);
+      border-bottom: 1px solid rgba(41, 148, 242, 0.2);
+    }
+
+    .score-value {
+      font-size: clamp(2.7rem, 5.9vw, 5.3rem);
+      font-weight: 900;
+      font-style: italic;
+      font-variant-numeric: tabular-nums;
+      line-height: 0.96;
+      letter-spacing: -0.04em;
+      color: #ffffff;
+      padding-right: 0.06em;
+      text-shadow:
+        0 4px 18px rgba(0, 0, 0, 0.65),
+        0 0 24px rgba(41, 148, 242, 0.25);
+      will-change: transform;
+      transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), color 0.18s ease;
+    }
+
+    .score-value.bump-up {
+      transform: scale(1.14);
+      color: var(--gold-light);
+      text-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.7),
+        0 0 28px rgba(242, 180, 34, 0.55);
+    }
+
+    .score-value.bump-down {
+      transform: scale(0.91);
+      color: #93c5fd;
+    }
+
+    .delta-float {
+      position: absolute;
+      top: 2px;
+      right: 10%;
+      font-size: clamp(0.88rem, 1.15vw, 1.15rem);
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 0.02em;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    .delta-float.show-up {
+      color: var(--gold-light);
+      text-shadow: 0 2px 10px rgba(242, 180, 34, 0.65);
+      animation: floatDelta 0.46s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .delta-float.show-down {
+      color: #f87171;
+      animation: floatDelta 0.46s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes floatDelta {
+      0% { opacity: 0; transform: translateY(8px) scale(0.85); }
+      25% { opacity: 1; transform: translateY(-2px) scale(1.06); }
+      100% { opacity: 0; transform: translateY(-20px) scale(0.96); }
+    }
+
+    /* Tactile Controls */
+    .card-controls {
+      display: flex;
+      align-items: stretch;
+      gap: clamp(6px, 0.7vw, 10px);
+      height: clamp(50px, 7.2vh, 68px);
+      flex-shrink: 0;
+    }
+
+    .btn-plus {
+      flex: 1 1 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 240, 168, 0.72);
+      border-radius: var(--radius-btn);
+      background: linear-gradient(180deg, #ffe274 0%, #f2b422 52%, #c97f0a 100%);
+      color: #051329;
+      font-family: inherit;
+      font-size: clamp(1.25rem, 2.05vw, 1.72rem);
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+      box-shadow:
+        0 8px 20px rgba(242, 180, 34, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.65);
+      transition: transform 0.08s ease, filter 0.12s ease, box-shadow 0.12s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-plus:hover {
+      filter: brightness(1.06);
+    }
+
+    .btn-plus:active,
+    .btn-plus.is-pressed {
+      transform: scale(0.95);
+      filter: brightness(0.94);
+      box-shadow: 0 3px 10px rgba(242, 180, 34, 0.22);
+    }
+
+    .btn-minus {
+      flex: 0 0 clamp(42px, 4.3vw, 56px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(41, 148, 242, 0.36);
+      border-radius: var(--radius-btn);
+      background: rgba(13, 43, 87, 0.68);
+      color: rgba(219, 234, 254, 0.86);
+      font-family: inherit;
+      font-size: clamp(0.92rem, 1.25vw, 1.12rem);
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.08s ease, background 0.15s ease, color 0.15s ease, opacity 0.18s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-minus:hover:not(:disabled) {
+      background: rgba(21, 101, 192, 0.62);
+      color: #ffffff;
+    }
+
+    .btn-minus:active:not(:disabled),
+    .btn-minus.is-pressed {
+      transform: scale(0.93);
+      background: rgba(239, 68, 68, 0.28);
+      border-color: rgba(248, 113, 113, 0.55);
+      color: #fecaca;
+    }
+
+    .btn-minus:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    /* ==========================================
+       SETTINGS DRAWER / MODAL
+       ========================================== */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(2, 8, 20, 0.66);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.24s ease;
+    }
+
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .settings-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 60;
+      width: min(460px, 92vw);
+      display: flex;
+      flex-direction: column;
+      background: rgba(6, 19, 42, 0.95);
+      backdrop-filter: blur(28px) saturate(150%);
+      -webkit-backdrop-filter: blur(28px) saturate(150%);
+      border-left: 1px solid rgba(242, 180, 34, 0.35);
+      box-shadow: -24px 0 60px rgba(0, 0, 0, 0.72);
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      padding-top: env(safe-area-inset-top);
+      padding-right: env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .settings-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px;
+      border-bottom: 1px solid rgba(41, 148, 242, 0.22);
+      flex-shrink: 0;
+    }
+
+    .drawer-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .drawer-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      font-style: italic;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #ffffff;
+    }
+
+    .save-status {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gold-light);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .save-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold-mid);
+    }
+
+    .btn-close {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(41, 148, 242, 0.32);
+      background: rgba(13, 43, 87, 0.55);
+      color: #f8fbff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .btn-close:hover {
+      background: rgba(21, 101, 192, 0.6);
+    }
+
+    .btn-close:active {
+      transform: scale(0.93);
+    }
+
+    .drawer-body {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding: 18px 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      touch-action: pan-y;
+    }
+
+    .section-label {
+      margin: 0 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold-mid);
+    }
+
+    .bg-editor-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(13, 43, 87, 0.38);
+      border: 1px solid rgba(41, 148, 242, 0.24);
+    }
+
+    .bg-editor-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .bg-thumb {
+      width: 88px;
+      height: 56px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid rgba(242, 180, 34, 0.35);
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(41, 148, 242, 0.45), transparent 65%),
+        linear-gradient(160deg, #0b244b 0%, #040d1d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .bg-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .bg-editor-actions {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .bg-controls-extra {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(41, 148, 242, 0.18);
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .dim-slider {
+      flex: 1;
+      max-width: 170px;
+      accent-color: var(--gold-mid);
+      cursor: pointer;
+    }
+
+    .toggle-check {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--gold-mid);
+      cursor: pointer;
+    }
+
+    .btn-secondary,
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 38px;
+      padding: 0 13px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, color 0.15s ease;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(180deg, #ffe06b 0%, #e5a11c 100%);
+      border: 1px solid rgba(255, 240, 168, 0.7);
+      color: #051329;
+    }
+
+    .btn-secondary:hover {
+      filter: brightness(1.06);
+    }
+
+    .btn-secondary:active {
+      transform: scale(0.96);
+    }
+
+    .btn-ghost {
+      background: rgba(13, 43, 87, 0.45);
+      border: 1px solid rgba(41, 148, 242, 0.28);
+      color: var(--text-secondary);
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      background: rgba(21, 101, 192, 0.48);
+      color: #ffffff;
+    }
+
+    .btn-ghost:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .players-editor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .player-editor-row {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(13, 43, 87, 0.38);
+      border: 1px solid rgba(41, 148, 242, 0.22);
+      align-items: center;
+    }
+
+    .editor-avatar-btn {
+      position: relative;
+      width: 54px;
+      height: 64px;
+      padding: 0;
+      border-radius: 11px;
+      overflow: hidden;
+      border: 1px solid rgba(242, 180, 34, 0.38);
+      background: #071936;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .editor-avatar-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+    }
+
+    .editor-avatar-overlay {
+      position: absolute;
+      inset: auto 0 0 0;
+      padding: 3px 0;
+      background: rgba(4, 13, 29, 0.78);
+      color: var(--gold-light);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+
+    .editor-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .editor-name-input {
+      width: 100%;
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(41, 148, 242, 0.34);
+      background: rgba(4, 13, 29, 0.82);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      font-style: italic;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      outline: none;
+      -webkit-user-select: text;
+      user-select: text;
+      transition: border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .editor-name-input:focus {
+      border-color: var(--gold-mid);
+      background: rgba(4, 13, 29, 0.98);
+    }
+
+    .editor-row-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .editor-photo-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-mini {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(41, 148, 242, 0.3);
+      background: rgba(13, 43, 87, 0.56);
+      color: #e2ecf9;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.14s ease, transform 0.1s ease;
+    }
+
+    .btn-mini:hover:not(:disabled) {
+      background: rgba(21, 101, 192, 0.65);
+      color: #ffffff;
+    }
+
+    .btn-mini:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    .btn-mini:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .btn-mini.reset-one {
+      border-color: rgba(248, 113, 113, 0.32);
+      background: rgba(239, 68, 68, 0.14);
+      color: #fca5a5;
+    }
+
+    .btn-mini.reset-one:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.28);
+      color: #fee2e2;
+    }
+
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.15);
+      font-size: 11px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: #ffffff;
+    }
+
+    .drawer-footer {
+      padding: 16px 22px;
+      border-top: 1px solid rgba(41, 148, 242, 0.22);
+      background: rgba(4, 13, 29, 0.78);
+      flex-shrink: 0;
+    }
+
+    .btn-reset-all {
+      width: 100%;
+      min-height: 46px;
+      border-radius: 12px;
+      border: 1px solid rgba(239, 68, 68, 0.44);
+      background: var(--danger-soft);
+      color: #fecaca;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.16s ease, transform 0.1s ease, border-color 0.16s ease;
+    }
+
+    .btn-reset-all:hover {
+      background: rgba(239, 68, 68, 0.3);
+      border-color: rgba(239, 68, 68, 0.65);
+      color: #ffffff;
+    }
+
+    .btn-reset-all:active {
+      transform: scale(0.98);
+    }
+
+    .file-input-hidden {
+      position: fixed;
+      top: -9999px;
+      left: -9999px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ==========================================
+       UNDO / FEEDBACK TOAST
+       ========================================== */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: max(env(safe-area-inset-bottom), 20px);
+      transform: translate(-50%, 120%);
+      z-index: 80;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(6, 20, 44, 0.96);
+      border: 1px solid rgba(242, 180, 34, 0.48);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.58);
+      color: #f8fbff;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+    }
+
+    .toast.visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .toast-undo {
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(180deg, #ffe06b 0%, #e5a11c 100%);
+      color: #051329;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .toast-undo:active {
+      transform: scale(0.94);
+    }
+
+    @media (max-height: 620px) {
+      .brand-logo {
+        height: 44px;
+      }
+      .stage {
+        gap: 8px;
+      }
+      .player-card {
+        padding: 9px;
+      }
+      .score-stage {
+        margin: 4px 0 6px;
+        padding: 3px 0;
+      }
+      .card-controls {
+        height: 44px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .players-grid {
+        gap: 8px;
+      }
+      .player-card {
+        padding: 8px;
+      }
+      .player-name {
+        font-size: 0.72rem;
+      }
+      .btn-minus {
+        flex-basis: 34px;
+        font-size: 0.8rem;
+      }
+      .btn-plus {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Fullscreen Background Stack (positive z-indexes so custom image ALWAYS shows) -->
+  <div class="bg-layer" aria-hidden="true"></div>
+  <img id="customBgImage" class="bg-image" alt="" aria-hidden="true" />
+  <div class="bg-scrim" aria-hidden="true"></div>
+
+  <!-- Top-Right Quick Edit Button -->
+  <button id="openEditBtn" class="edit-trigger" type="button" aria-label="Abrir panel de edición">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+    <span>Editar</span>
+  </button>
+
+  <!-- Main Stage -->
+  <main class="stage">
+    <h1 class="sr-only">El Chiringuito · Marcador interactivo de 5 jugadores</h1>
+
+    <header id="brandHeader" class="brand-header">
+      <div class="brand-line" aria-hidden="true"></div>
+      <img class="brand-logo" src="data:image/webp;base64,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" alt="El Chiringuito" />
+      <div class="brand-line right" aria-hidden="true"></div>
+    </header>
+
+    <section id="playersGrid" class="players-grid" aria-label="Tarjetas de jugadores"></section>
+  </main>
+
+  <!-- Quick Edit Drawer -->
+  <div id="drawerBackdrop" class="drawer-backdrop" aria-hidden="true"></div>
+
+  <aside id="settingsDrawer" class="settings-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
+    <header class="drawer-header">
+      <div class="drawer-title-group">
+        <h2 id="drawerTitle" class="drawer-title">Configuración rápida</h2>
+        <span id="saveStatus" class="save-status">
+          <span class="save-dot" aria-hidden="true"></span>
+          <span id="saveStatusText">Guardado automático local</span>
+        </span>
+      </div>
+      <button id="closeEditBtn" class="btn-close" type="button" aria-label="Cerrar panel de edición">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </header>
+
+    <div class="drawer-body">
+      <!-- Background & Display Settings -->
+      <section aria-labelledby="bgSectionLabel">
+        <h3 id="bgSectionLabel" class="section-label">Fondo y cabecera</h3>
+        <div class="bg-editor-panel">
+          <div class="bg-editor-top">
+            <div id="bgThumb" class="bg-thumb">Por defecto</div>
+            <div class="bg-editor-actions">
+              <button id="uploadBgBtn" class="btn-secondary" type="button">Subir fondo</button>
+              <button id="removeBgBtn" class="btn-ghost" type="button" disabled>Restaurar</button>
+            </div>
+          </div>
+
+          <div class="bg-controls-extra">
+            <label class="control-row" for="bgDimSlider">
+              <span>Oscurecer fondo (<span id="bgDimValue">22%</span>)</span>
+              <input id="bgDimSlider" class="dim-slider" type="range" min="0" max="75" value="22" />
+            </label>
+            <label class="control-row" for="showLogoToggle">
+              <span>Mostrar logo arriba</span>
+              <input id="showLogoToggle" class="toggle-check" type="checkbox" checked />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Players Config -->
+      <section aria-labelledby="playersSectionLabel">
+        <h3 id="playersSectionLabel" class="section-label">Jugadores (5)</h3>
+        <div id="playersEditorList" class="players-editor-list"></div>
+      </section>
+    </div>
+
+    <footer class="drawer-footer">
+      <button id="resetAllBtn" class="btn-reset-all" type="button">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+          <path d="M3 3v5h5"></path>
+        </svg>
+        <span>Resetear todos los contadores a 0</span>
+      </button>
+    </footer>
+  </aside>
+
+  <!-- Hidden File Inputs -->
+  <input id="bgFileInput" class="file-input-hidden" type="file" accept="image/*" />
+  <input id="playerFileInput" class="file-input-hidden" type="file" accept="image/*" />
+
+  <!-- Undo Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <span id="toastMessage">Contadores reseteados a 0</span>
+    <button id="toastUndoBtn" class="toast-undo" type="button" hidden>Deshacer</button>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      /* =========================================
+         1. IPAD ZOOM & GESTURE PREVENTION
+         ========================================= */
+      document.addEventListener('dblclick', (e) => {
+        if (!e.target.closest('input, textarea')) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach((evt) => {
+        document.addEventListener(evt, (e) => e.preventDefault(), { passive: false });
+      });
+
+      /* =========================================
+         2. STATE & DEFAULT DATA
+         ========================================= */
+      const DB_NAME = 'ChiringuitoScoreboardDB';
+      const DB_VERSION = 1;
+      const STORE_NAME = 'app_state';
+      const STATE_KEY = 'scoreboard_v2';
+      const LS_KEY = 'chiringuito_scoreboard_v2';
+
+      function createDefaultAvatarSvg(uid) {
+        return `
+          <svg viewBox="0 0 180 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="jerseyGrad_${uid}" x1="90" y1="112" x2="90" y2="200" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#17549c"/>
+                <stop offset="100%" stop-color="#071936"/>
+              </linearGradient>
+              <linearGradient id="headGrad_${uid}" x1="90" y1="30" x2="90" y2="104" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#3b82c4"/>
+                <stop offset="100%" stop-color="#12396b"/>
+              </linearGradient>
+            </defs>
+            <circle cx="90" cy="66" r="34" fill="url(#headGrad_${uid})"/>
+            <path d="M26 200C28 148 50 118 90 118C130 118 152 148 154 200H26Z" fill="url(#jerseyGrad_${uid})"/>
+            <path d="M70 119L90 140L110 119" stroke="#f2b422" stroke-opacity="0.82" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `;
+      }
+
+      const createDefaultState = () => ({
+        background: null,
+        bgDim: 22,
+        showLogo: true,
+        players: [
+          { id: 0, name: 'JUGADOR 1', score: 0, photo: null },
+          { id: 1, name: 'JUGADOR 2', score: 0, photo: null },
+          { id: 2, name: 'JUGADOR 3', score: 0, photo: null },
+          { id: 3, name: 'JUGADOR 4', score: 0, photo: null },
+          { id: 4, name: 'JUGADOR 5', score: 0, photo: null }
+        ]
+      });
+
+      let state = createDefaultState();
+      let dbInstance = null;
+      let activePhotoUploadIndex = null;
+      let undoSnapshot = null;
+      let toastTimer = null;
+      let saveStatusTimer = null;
+
+      /* =========================================
+         3. ROCK-SOLID PERSISTENCE (IDB + LS)
+         ========================================= */
+      function requestPersistentStorage() {
+        if (navigator.storage && typeof navigator.storage.persist === 'function') {
+          navigator.storage.persist().catch(() => {});
+        }
+      }
+
+      function openDatabase() {
+        return new Promise((resolve) => {
+          if (!('indexedDB' in window)) {
+            resolve(null);
+            return;
+          }
+          try {
+            const req = indexedDB.open(DB_NAME, DB_VERSION);
+            req.onupgradeneeded = (e) => {
+              const db = e.target.result;
+              if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+              }
+            };
+            req.onsuccess = (e) => resolve(e.target.result);
+            req.onerror = () => resolve(null);
+          } catch {
+            resolve(null);
+          }
+        });
+      }
+
+      async function loadState() {
+        requestPersistentStorage();
+        dbInstance = await openDatabase();
+
+        if (dbInstance) {
+          const fromIdb = await new Promise((resolve) => {
+            try {
+              const tx = dbInstance.transaction(STORE_NAME, 'readonly');
+              const req = tx.objectStore(STORE_NAME).get(STATE_KEY);
+              req.onsuccess = () => resolve(req.result || null);
+              req.onerror = () => resolve(null);
+            } catch {
+              resolve(null);
+            }
+          });
+          if (fromIdb && Array.isArray(fromIdb.players) && fromIdb.players.length === 5) {
+            return normalizeState(fromIdb);
+          }
+        }
+
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.players) && parsed.players.length === 5) {
+              return normalizeState(parsed);
+            }
+          }
+        } catch {}
+
+        return createDefaultState();
+      }
+
+      function normalizeState(raw) {
+        const defaults = createDefaultState();
+        const dimVal = Number(raw.bgDim);
+        return {
+          background: typeof raw.background === 'string' ? raw.background : null,
+          bgDim: Number.isFinite(dimVal) ? Math.min(75, Math.max(0, Math.round(dimVal))) : 22,
+          showLogo: typeof raw.showLogo === 'boolean' ? raw.showLogo : true,
+          players: defaults.players.map((def, idx) => {
+            const p = raw.players[idx] || {};
+            return {
+              id: idx,
+              name: typeof p.name === 'string' ? p.name : def.name,
+              score: Number.isFinite(Number(p.score)) ? Math.max(0, Math.floor(Number(p.score))) : 0,
+              photo: typeof p.photo === 'string' ? p.photo : null
+            };
+          })
+        };
+      }
+
+      function persistState() {
+        updateSaveStatus('Guardando...');
+
+        // 1. Primary: IndexedDB (handles high-res photos & background effortlessly)
+        if (dbInstance) {
+          try {
+            const tx = dbInstance.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).put(state, STATE_KEY);
+            tx.oncomplete = () => updateSaveStatus('Guardado permanente');
+            tx.onerror = () => saveToLocalStorage();
+          } catch {
+            saveToLocalStorage();
+          }
+        } else {
+          saveToLocalStorage();
+        }
+
+        // 2. Mirror to localStorage (full state if it fits, otherwise lightweight metadata)
+        saveToLocalStorage(true);
+      }
+
+      function saveToLocalStorage(silent = false) {
+        try {
+          localStorage.setItem(LS_KEY, JSON.stringify(state));
+          if (!silent) updateSaveStatus('Guardado local');
+        } catch {
+          try {
+            const lightPayload = {
+              background: null,
+              bgDim: state.bgDim,
+              showLogo: state.showLogo,
+              players: state.players.map(({ id, name, score }) => ({ id, name, score, photo: null }))
+            };
+            localStorage.setItem(LS_KEY, JSON.stringify(lightPayload));
+          } catch {}
+        }
+      }
+
+      // Ensure final flush when user closes or backgrounds Safari on iPad
+      window.addEventListener('pagehide', () => persistState());
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') persistState();
+      });
+
+      function updateSaveStatus(text) {
+        const el = document.getElementById('saveStatusText');
+        if (!el) return;
+        el.textContent = text;
+        clearTimeout(saveStatusTimer);
+        if (text !== 'Guardado automático local') {
+          saveStatusTimer = setTimeout(() => {
+            el.textContent = 'Guardado automático local';
+          }, 1800);
+        }
+      }
+
+      /* =========================================
+         4. IMAGE OPTIMIZATION FOR IPAD SAFARI
+         ========================================= */
+      function processImageFile(file, maxDimension, quality) {
+        return new Promise((resolve, reject) => {
+          if (!file || (file.type && !file.type.startsWith('image/'))) {
+            reject(new Error('Archivo de imagen no válido'));
+            return;
+          }
+
+          const objectUrl = URL.createObjectURL(file);
+          const img = new Image();
+
+          img.onload = () => {
+            try {
+              let { naturalWidth: w, naturalHeight: h } = img;
+              if (w > maxDimension || h > maxDimension) {
+                const ratio = Math.min(maxDimension / w, maxDimension / h);
+                w = Math.max(1, Math.round(w * ratio));
+                h = Math.max(1, Math.round(h * ratio));
+              }
+
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              ctx.drawImage(img, 0, 0, w, h);
+
+              const outputType = file.type === 'image/png' && w <= 720 ? 'image/png' : 'image/jpeg';
+              const dataUrl = canvas.toDataURL(outputType, quality);
+              URL.revokeObjectURL(objectUrl);
+              resolve(dataUrl);
+            } catch (err) {
+              URL.revokeObjectURL(objectUrl);
+              reject(err);
+            }
+          };
+
+          img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('Error leyendo imagen'));
+            reader.readAsDataURL(file);
+          };
+
+          img.src = objectUrl;
+        });
+      }
+
+      /* =========================================
+         5. DOM REFERENCES & BUILDERS
+         ========================================= */
+      const playersGrid = document.getElementById('playersGrid');
+      const customBgImage = document.getElementById('customBgImage');
+      const brandHeader = document.getElementById('brandHeader');
+      const bgThumb = document.getElementById('bgThumb');
+      const removeBgBtn = document.getElementById('removeBgBtn');
+      const bgDimSlider = document.getElementById('bgDimSlider');
+      const bgDimValue = document.getElementById('bgDimValue');
+      const showLogoToggle = document.getElementById('showLogoToggle');
+      const playersEditorList = document.getElementById('playersEditorList');
+      const openEditBtn = document.getElementById('openEditBtn');
+      const closeEditBtn = document.getElementById('closeEditBtn');
+      const drawerBackdrop = document.getElementById('drawerBackdrop');
+      const settingsDrawer = document.getElementById('settingsDrawer');
+      const uploadBgBtn = document.getElementById('uploadBgBtn');
+      const bgFileInput = document.getElementById('bgFileInput');
+      const playerFileInput = document.getElementById('playerFileInput');
+      const resetAllBtn = document.getElementById('resetAllBtn');
+      const toastEl = document.getElementById('toast');
+      const toastMessageEl = document.getElementById('toastMessage');
+      const toastUndoBtn = document.getElementById('toastUndoBtn');
+
+      const cardRefs = [];
+      const editorRefs = [];
+
+      function buildBoardCards() {
+        playersGrid.innerHTML = '';
+        cardRefs.length = 0;
+
+        state.players.forEach((player, idx) => {
+          const card = document.createElement('article');
+          card.className = 'player-card';
+          card.dataset.playerId = String(idx);
+
+          card.innerHTML = `
+            <div class="portrait-wrap">
+              <img class="portrait-img" alt="" hidden />
+              <div class="portrait-default">${createDefaultAvatarSvg('card_' + idx)}</div>
+            </div>
+            <div class="name-ribbon">
+              <h2 class="player-name"></h2>
+            </div>
+            <div class="score-stage">
+              <span class="score-value" aria-live="polite">0</span>
+              <span class="delta-float" aria-hidden="true"></span>
+            </div>
+            <div class="card-controls">
+              <button class="btn-plus" type="button">+1</button>
+              <button class="btn-minus" type="button">−1</button>
+            </div>
+          `;
+
+          const portraitImg = card.querySelector('.portrait-img');
+          const portraitDefault = card.querySelector('.portrait-default');
+          const nameEl = card.querySelector('.player-name');
+          const scoreEl = card.querySelector('.score-value');
+          const deltaEl = card.querySelector('.delta-float');
+          const plusBtn = card.querySelector('.btn-plus');
+          const minusBtn = card.querySelector('.btn-minus');
+
+          bindInstantAction(plusBtn, () => adjustScore(idx, 1));
+          bindInstantAction(minusBtn, () => adjustScore(idx, -1));
+
+          playersGrid.appendChild(card);
+          cardRefs.push({
+            card,
+            portraitImg,
+            portraitDefault,
+            nameEl,
+            scoreEl,
+            deltaEl,
+            plusBtn,
+            minusBtn,
+            bumpTimer: null
+          });
+        });
+      }
+
+      function buildEditorRows() {
+        playersEditorList.innerHTML = '';
+        editorRefs.length = 0;
+
+        state.players.forEach((player, idx) => {
+          const row = document.createElement('div');
+          row.className = 'player-editor-row';
+
+          row.innerHTML = `
+            <button class="editor-avatar-btn" type="button" aria-label="Cambiar foto del jugador ${idx + 1}">
+              <img alt="" hidden />
+              <div class="editor-avatar-fallback" style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;">${createDefaultAvatarSvg('edit_' + idx)}</div>
+              <span class="editor-avatar-overlay">Foto</span>
+            </button>
+            <div class="editor-fields">
+              <input class="editor-name-input" type="text" maxlength="24" autocomplete="off" spellcheck="false" placeholder="JUGADOR ${idx + 1}" aria-label="Nombre del jugador ${idx + 1}" />
+              <div class="editor-row-actions">
+                <div class="editor-photo-actions">
+                  <button class="btn-mini upload-photo-btn" type="button">Cambiar foto</button>
+                  <button class="btn-mini clear-photo-btn" type="button" title="Quitar foto" aria-label="Quitar foto del jugador ${idx + 1}" hidden>×</button>
+                </div>
+                <button class="btn-mini reset-one" type="button">
+                  <span>Reset</span>
+                  <span class="score-pill">0</span>
+                </button>
+              </div>
+            </div>
+          `;
+
+          const avatarBtn = row.querySelector('.editor-avatar-btn');
+          const avatarImg = avatarBtn.querySelector('img');
+          const avatarFallback = avatarBtn.querySelector('.editor-avatar-fallback');
+          const nameInput = row.querySelector('.editor-name-input');
+          const uploadPhotoBtn = row.querySelector('.upload-photo-btn');
+          const clearPhotoBtn = row.querySelector('.clear-photo-btn');
+          const resetOneBtn = row.querySelector('.reset-one');
+          const scorePill = row.querySelector('.score-pill');
+
+          const triggerPhotoPicker = () => {
+            activePhotoUploadIndex = idx;
+            playerFileInput.value = '';
+            playerFileInput.click();
+          };
+
+          avatarBtn.addEventListener('click', triggerPhotoPicker);
+          uploadPhotoBtn.addEventListener('click', triggerPhotoPicker);
+
+          clearPhotoBtn.addEventListener('click', () => {
+            state.players[idx].photo = null;
+            syncPlayerUI(idx);
+            persistState();
+          });
+
+          nameInput.addEventListener('input', (e) => {
+            state.players[idx].name = e.target.value;
+            syncPlayerUI(idx, { skipInputValue: true });
+            persistState();
+          });
+
+          resetOneBtn.addEventListener('click', () => {
+            if (state.players[idx].score === 0) return;
+            const prevScore = state.players[idx].score;
+            state.players[idx].score = 0;
+            syncPlayerUI(idx);
+            persistState();
+            showToast(`Contador de ${getDisplayName(idx)} a 0`, () => {
+              state.players[idx].score = prevScore;
+              syncPlayerUI(idx);
+              persistState();
+            });
+          });
+
+          playersEditorList.appendChild(row);
+          editorRefs.push({
+            avatarImg,
+            avatarFallback,
+            nameInput,
+            clearPhotoBtn,
+            resetOneBtn,
+            scorePill
+          });
+        });
+      }
+
+      function bindInstantAction(button, handler) {
+        let lastPointerTime = 0;
+
+        button.addEventListener('pointerdown', (e) => {
+          if (button.disabled) return;
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          e.preventDefault();
+          lastPointerTime = performance.now();
+          button.classList.add('is-pressed');
+          handler();
+          setTimeout(() => button.classList.remove('is-pressed'), 110);
+        });
+
+        button.addEventListener('keydown', (e) => {
+          if (button.disabled) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handler();
+          }
+        });
+
+        button.addEventListener('click', (e) => {
+          if (performance.now() - lastPointerTime < 450) {
+            e.preventDefault();
+            return;
+          }
+          if (!button.disabled) handler();
+        });
+      }
+
+      /* =========================================
+         6. UI SYNC & INTERACTIONS
+         ========================================= */
+      function getDisplayName(idx) {
+        const trimmed = (state.players[idx].name || '').trim();
+        return trimmed ? trimmed.toUpperCase() : `JUGADOR ${idx + 1}`;
+      }
+
+      function syncDisplaySettingsUI() {
+        document.documentElement.style.setProperty('--bg-dim', String(state.bgDim / 100));
+        bgDimSlider.value = String(state.bgDim);
+        bgDimValue.textContent = `${state.bgDim}%`;
+
+        brandHeader.hidden = !state.showLogo;
+        document.body.classList.toggle('logo-hidden', !state.showLogo);
+        showLogoToggle.checked = state.showLogo;
+
+        if (state.background) {
+          customBgImage.src = state.background;
+          customBgImage.classList.add('has-image');
+          document.body.classList.add('has-custom-bg');
+          bgThumb.innerHTML = `<img src="${state.background}" alt="Vista previa del fondo" />`;
+          removeBgBtn.disabled = false;
+        } else {
+          customBgImage.removeAttribute('src');
+          customBgImage.classList.remove('has-image');
+          document.body.classList.remove('has-custom-bg');
+          bgThumb.textContent = 'Por defecto';
+          removeBgBtn.disabled = true;
+        }
+      }
+
+      function syncPlayerUI(idx, options = {}) {
+        const player = state.players[idx];
+        const card = cardRefs[idx];
+        const editor = editorRefs[idx];
+        const displayName = getDisplayName(idx);
+
+        if (card) {
+          card.nameEl.textContent = displayName;
+          card.scoreEl.textContent = String(player.score);
+          card.plusBtn.setAttribute('aria-label', `Sumar 1 a ${displayName}`);
+          card.minusBtn.setAttribute('aria-label', `Restar 1 a ${displayName}`);
+          card.minusBtn.disabled = player.score <= 0;
+
+          if (player.photo) {
+            if (card.portraitImg.src !== player.photo) {
+              card.portraitImg.src = player.photo;
+            }
+            card.portraitImg.alt = displayName;
+            card.portraitImg.hidden = false;
+            card.portraitDefault.hidden = true;
+          } else {
+            card.portraitImg.removeAttribute('src');
+            card.portraitImg.hidden = true;
+            card.portraitDefault.hidden = false;
+          }
+        }
+
+        if (editor) {
+          if (!options.skipInputValue && editor.nameInput.value !== player.name) {
+            editor.nameInput.value = player.name;
+          }
+          editor.scorePill.textContent = String(player.score);
+          editor.resetOneBtn.disabled = player.score <= 0;
+
+          if (player.photo) {
+            if (editor.avatarImg.src !== player.photo) {
+              editor.avatarImg.src = player.photo;
+            }
+            editor.avatarImg.hidden = false;
+            editor.avatarFallback.style.display = 'none';
+            editor.clearPhotoBtn.hidden = false;
+          } else {
+            editor.avatarImg.removeAttribute('src');
+            editor.avatarImg.hidden = true;
+            editor.avatarFallback.style.display = 'flex';
+            editor.clearPhotoBtn.hidden = true;
+          }
+        }
+      }
+
+      function syncAllUI() {
+        syncDisplaySettingsUI();
+        for (let i = 0; i < state.players.length; i++) {
+          syncPlayerUI(i);
+        }
+      }
+
+      function adjustScore(idx, delta) {
+        const player = state.players[idx];
+        const nextScore = Math.max(0, player.score + delta);
+        if (nextScore === player.score) return;
+
+        player.score = nextScore;
+        syncPlayerUI(idx);
+        persistState();
+
+        const ref = cardRefs[idx];
+        if (!ref) return;
+
+        clearTimeout(ref.bumpTimer);
+        ref.scoreEl.classList.remove('bump-up', 'bump-down');
+        ref.card.classList.remove('pulse-up');
+        ref.deltaEl.classList.remove('show-up', 'show-down');
+
+        void ref.scoreEl.offsetWidth;
+
+        if (delta > 0) {
+          ref.scoreEl.classList.add('bump-up');
+          ref.card.classList.add('pulse-up');
+          ref.deltaEl.textContent = '+1';
+          ref.deltaEl.classList.add('show-up');
+        } else {
+          ref.scoreEl.classList.add('bump-down');
+          ref.deltaEl.textContent = '−1';
+          ref.deltaEl.classList.add('show-down');
+        }
+
+        ref.bumpTimer = setTimeout(() => {
+          ref.scoreEl.classList.remove('bump-up', 'bump-down');
+          ref.card.classList.remove('pulse-up');
+        }, 160);
+      }
+
+      /* =========================================
+         7. DRAWER, SLIDERS & TOAST
+         ========================================= */
+      function openDrawer() {
+        drawerBackdrop.classList.add('open');
+        settingsDrawer.classList.add('open');
+        drawerBackdrop.setAttribute('aria-hidden', 'false');
+        settingsDrawer.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeDrawer() {
+        drawerBackdrop.classList.remove('open');
+        settingsDrawer.classList.remove('open');
+        drawerBackdrop.setAttribute('aria-hidden', 'true');
+        settingsDrawer.setAttribute('aria-hidden', 'true');
+        if (document.activeElement && settingsDrawer.contains(document.activeElement)) {
+          document.activeElement.blur();
+        }
+      }
+
+      function showToast(message, onUndo = null) {
+        toastMessageEl.textContent = message;
+        undoSnapshot = onUndo;
+        toastUndoBtn.hidden = !onUndo;
+        toastEl.classList.add('visible');
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastEl.classList.remove('visible');
+          undoSnapshot = null;
+        }, 4500);
+      }
+
+      openEditBtn.addEventListener('click', openDrawer);
+      closeEditBtn.addEventListener('click', closeDrawer);
+      drawerBackdrop.addEventListener('click', closeDrawer);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && settingsDrawer.classList.contains('open')) {
+          closeDrawer();
+        }
+      });
+
+      toastUndoBtn.addEventListener('click', () => {
+        if (typeof undoSnapshot === 'function') {
+          const fn = undoSnapshot;
+          undoSnapshot = null;
+          toastEl.classList.remove('visible');
+          clearTimeout(toastTimer);
+          fn();
+        }
+      });
+
+      bgDimSlider.addEventListener('input', (e) => {
+        state.bgDim = Number(e.target.value);
+        syncDisplaySettingsUI();
+        persistState();
+      });
+
+      showLogoToggle.addEventListener('change', (e) => {
+        state.showLogo = e.target.checked;
+        syncDisplaySettingsUI();
+        persistState();
+      });
+
+      /* =========================================
+         8. FILE UPLOADS & GLOBAL RESET
+         ========================================= */
+      uploadBgBtn.addEventListener('click', () => {
+        bgFileInput.value = '';
+        bgFileInput.click();
+      });
+
+      removeBgBtn.addEventListener('click', () => {
+        state.background = null;
+        syncDisplaySettingsUI();
+        persistState();
+      });
+
+      bgFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          updateSaveStatus('Procesando fondo...');
+          const optimized = await processImageFile(file, 2048, 0.86);
+          state.background = optimized;
+          syncDisplaySettingsUI();
+          persistState();
+          showToast('Fondo actualizado');
+        } catch {
+          showToast('No se pudo cargar la imagen de fondo');
+        }
+      });
+
+      playerFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        const idx = activePhotoUploadIndex;
+        if (!file || idx === null || !state.players[idx]) return;
+        try {
+          updateSaveStatus('Procesando foto...');
+          const optimized = await processImageFile(file, 720, 0.86);
+          state.players[idx].photo = optimized;
+          syncPlayerUI(idx);
+          persistState();
+        } catch {
+          showToast('No se pudo cargar la foto del jugador');
+        }
+      });
+
+      resetAllBtn.addEventListener('click', () => {
+        const hasAnyScore = state.players.some((p) => p.score > 0);
+        if (!hasAnyScore) {
+          showToast('Todos los contadores ya están en 0');
+          return;
+        }
+        const previousScores = state.players.map((p) => p.score);
+        state.players.forEach((p) => { p.score = 0; });
+        syncAllUI();
+        persistState();
+
+        showToast('Todos los contadores reseteados a 0', () => {
+          state.players.forEach((p, idx) => { p.score = previousScores[idx]; });
+          syncAllUI();
+          persistState();
+        });
+      });
+
+      /* =========================================
+         9. BOOTSTRAP
+         ========================================= */
+      async function init() {
+        state = await loadState();
+        buildBoardCards();
+        buildEditorRows();
+        syncAllUI();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
