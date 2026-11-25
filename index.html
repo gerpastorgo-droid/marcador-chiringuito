@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="El Chiringuito · Marcador" />
   <meta name="theme-color" content="#040d1d" />
-  <meta name="description" content="Marcador interactivo estilo El Chiringuito para 5 jugadores de fútbol diseñado para pantalla completa horizontal en iPad." />
-  <title>El Chiringuito · Marcador 5 Jugadores</title>
+  <meta name="description" content="Marcador interactivo estilo El Chiringuito configurable (1 a 10 jugadores) diseñado para pantalla completa horizontal en iPad y móvil." />
+  <title>El Chiringuito · Marcador Jugadores</title>
   <style>
     :root {
       --navy-deep: #040d1d;
@@ -24,6 +24,8 @@
       --text-muted: rgba(147, 185, 232, 0.74);
       --danger-soft: rgba(239, 68, 68, 0.18);
       --bg-dim: 0.22;
+      --grid-cols: 5;
+      --grid-max-width: 1560px;
       --radius-card: clamp(14px, 1.6vw, 22px);
       --radius-btn: clamp(10px, 1vw, 14px);
       --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -80,7 +82,6 @@
         linear-gradient(180deg, #071834 0%, #040f24 55%, #030916 100%);
     }
 
-    /* Subtle honeycomb hex mesh inspired by the El Chiringuito shield */
     .bg-layer::before {
       content: "";
       position: absolute;
@@ -93,7 +94,6 @@
       -webkit-mask-image: radial-gradient(ellipse 85% 80% at 50% 45%, #000 15%, transparent 92%);
     }
 
-    /* Subtle studio floodlights */
     .bg-layer::after {
       content: "";
       position: absolute;
@@ -104,7 +104,6 @@
         conic-gradient(from 142deg at 82% -12%, transparent 0deg, rgba(255, 226, 122, 0.06) 12deg, transparent 28deg);
     }
 
-    /* Custom uploaded background image — always strictly ABOVE bg-layer */
     .bg-image {
       position: fixed;
       inset: 0;
@@ -122,7 +121,6 @@
       opacity: 1;
     }
 
-    /* Controllable readability scrim */
     .bg-scrim {
       position: fixed;
       inset: 0;
@@ -257,22 +255,72 @@
     }
 
     /* ==========================================
-       5-PLAYER EL CHIRINGUITO BROADCAST ROW
+       DYNAMIC BROADCAST PLAYERS GRID
        ========================================== */
     .players-grid {
       width: 100%;
-      max-width: 1560px;
+      max-width: var(--grid-max-width);
       flex: 1 1 auto;
       max-height: min(76vh, 620px);
       min-height: 0;
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: clamp(10px, 1.6vw, 22px);
+      grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
+      gap: clamp(10px, 1.5vw, 22px);
       align-items: stretch;
     }
 
     body.logo-hidden .players-grid {
       max-height: min(82vh, 670px);
+    }
+
+    /* Compact 2-row mode when 7–10 players are active on landscape iPad */
+    body.multi-row .brand-logo {
+      height: clamp(38px, 7vh, 62px);
+    }
+
+    body.multi-row .stage {
+      gap: clamp(6px, 1vh, 12px);
+    }
+
+    body.multi-row .players-grid {
+      max-height: 84vh;
+      grid-auto-rows: minmax(0, 1fr);
+      gap: clamp(8px, 1.1vw, 14px);
+    }
+
+    body.multi-row .player-card {
+      padding: clamp(7px, 0.9vw, 12px);
+    }
+
+    body.multi-row .name-ribbon {
+      margin-top: 6px;
+      padding: 4px 6px;
+    }
+
+    body.multi-row .player-name {
+      font-size: clamp(0.74rem, 1.1vw, 1.02rem);
+    }
+
+    body.multi-row .score-stage {
+      margin: 4px 0 6px;
+      padding: 2px 0;
+    }
+
+    body.multi-row .score-value {
+      font-size: clamp(1.9rem, 3.8vw, 3.2rem);
+    }
+
+    body.multi-row .card-controls {
+      height: clamp(38px, 5.4vh, 50px);
+    }
+
+    body.multi-row .btn-plus {
+      font-size: clamp(1rem, 1.5vw, 1.35rem);
+    }
+
+    body.multi-row .btn-minus {
+      flex-basis: clamp(36px, 3.4vw, 46px);
+      font-size: clamp(0.82rem, 1vw, 0.98rem);
     }
 
     .player-card {
@@ -298,7 +346,6 @@
       transition: border-color 0.18s ease, box-shadow 0.18s ease;
     }
 
-    /* Metallic championship gold top bezel bar */
     .player-card::before {
       content: "";
       position: absolute;
@@ -318,7 +365,6 @@
         inset 0 1px 0 rgba(255, 226, 122, 0.55);
     }
 
-    /* Portrait frame */
     .portrait-wrap {
       position: relative;
       width: 100%;
@@ -380,7 +426,6 @@
       pointer-events: none;
     }
 
-    /* El Chiringuito signature skewed navy-and-gold nameplate ribbon */
     .name-ribbon {
       margin: clamp(8px, 1.3vh, 14px) 0 0;
       padding: clamp(5px, 0.8vh, 8px) clamp(6px, 0.8vw, 10px);
@@ -411,7 +456,6 @@
       text-shadow: 0 2px 8px rgba(0, 0, 0, 0.72);
     }
 
-    /* Score Display */
     .score-stage {
       position: relative;
       flex: 0 0 auto;
@@ -483,7 +527,6 @@
       100% { opacity: 0; transform: translateY(-20px) scale(0.96); }
     }
 
-    /* Tactile Controls */
     .card-controls {
       display: flex;
       align-items: stretch;
@@ -586,10 +629,10 @@
       right: 0;
       bottom: 0;
       z-index: 60;
-      width: min(460px, 92vw);
+      width: min(460px, 94vw);
       display: flex;
       flex-direction: column;
-      background: rgba(6, 19, 42, 0.95);
+      background: rgba(6, 19, 42, 0.96);
       backdrop-filter: blur(28px) saturate(150%);
       -webkit-backdrop-filter: blur(28px) saturate(150%);
       border-left: 1px solid rgba(242, 180, 34, 0.35);
@@ -609,7 +652,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 22px;
+      padding: 16px 20px;
       border-bottom: 1px solid rgba(41, 148, 242, 0.22);
       flex-shrink: 0;
     }
@@ -673,15 +716,30 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
-      padding: 18px 22px 24px;
+      padding: 16px 20px 22px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
       touch-action: pan-y;
     }
 
+    .inapp-warning {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(242, 180, 34, 0.14);
+      border: 1px solid rgba(242, 180, 34, 0.42);
+      color: #fef3c7;
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .inapp-warning[hidden] {
+      display: none;
+    }
+
     .section-label {
-      margin: 0 0 10px;
+      margin: 0 0 9px;
       font-size: 12px;
       font-weight: 800;
       text-transform: uppercase;
@@ -689,7 +747,7 @@
       color: var(--gold-mid);
     }
 
-    .bg-editor-panel {
+    .panel-box {
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -697,6 +755,87 @@
       border-radius: 16px;
       background: rgba(13, 43, 87, 0.38);
       border: 1px solid rgba(41, 148, 242, 0.24);
+    }
+
+    /* Player Count Selector */
+    .count-stepper-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .count-stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .count-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(41, 148, 242, 0.38);
+      background: rgba(13, 43, 87, 0.72);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.14s ease, transform 0.1s ease;
+    }
+
+    .count-btn:hover:not(:disabled) {
+      background: rgba(21, 101, 192, 0.75);
+    }
+
+    .count-btn:active:not(:disabled) {
+      transform: scale(0.93);
+    }
+
+    .count-btn:disabled {
+      opacity: 0.32;
+      cursor: default;
+    }
+
+    .count-readout {
+      min-width: 38px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 900;
+      font-style: italic;
+      font-variant-numeric: tabular-nums;
+      color: var(--gold-light);
+    }
+
+    .count-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preset-pill {
+      min-width: 36px;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(41, 148, 242, 0.3);
+      background: rgba(4, 13, 29, 0.55);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+    }
+
+    .preset-pill.active {
+      background: linear-gradient(180deg, #ffe06b 0%, #e5a11c 100%);
+      border-color: rgba(255, 240, 168, 0.75);
+      color: #051329;
     }
 
     .bg-editor-top {
@@ -971,16 +1110,25 @@
       color: #ffffff;
     }
 
+    .backup-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
     .drawer-footer {
-      padding: 16px 22px;
+      padding: 14px 20px;
       border-top: 1px solid rgba(41, 148, 242, 0.22);
       background: rgba(4, 13, 29, 0.78);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       flex-shrink: 0;
     }
 
     .btn-reset-all {
       width: 100%;
-      min-height: 46px;
+      min-height: 44px;
       border-radius: 12px;
       border: 1px solid rgba(239, 68, 68, 0.44);
       background: var(--danger-soft);
@@ -1039,6 +1187,7 @@
       font-weight: 700;
       opacity: 0;
       pointer-events: none;
+      max-width: 92vw;
       transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
     }
 
@@ -1058,15 +1207,17 @@
       font-size: 12px;
       font-weight: 900;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     .toast-undo:active {
       transform: scale(0.94);
     }
 
-    @media (max-height: 620px) {
+    /* Compact landscape heights */
+    @media (max-height: 620px) and (orientation: landscape) {
       .brand-logo {
-        height: 44px;
+        height: 42px;
       }
       .stage {
         gap: 8px;
@@ -1083,33 +1234,58 @@
       }
     }
 
-    @media (max-width: 680px) {
-      .players-grid {
-        gap: 8px;
+    /* Mobile portrait responsive layout (keeps iPad landscape locked 100vw x 100vh) */
+    @media (max-width: 720px) and (orientation: portrait) {
+      html, body {
+        overflow-y: auto;
+        height: auto;
+        min-height: 100dvh;
       }
-      .player-card {
-        padding: 8px;
+      .stage {
+        height: auto;
+        min-height: 100dvh;
+        justify-content: flex-start;
+        padding-top: max(env(safe-area-inset-top), 66px);
+        padding-bottom: max(env(safe-area-inset-bottom), 28px);
       }
-      .player-name {
-        font-size: 0.72rem;
+      .brand-logo {
+        height: 54px;
       }
-      .btn-minus {
-        flex-basis: 34px;
-        font-size: 0.8rem;
+      .players-grid,
+      body.multi-row .players-grid,
+      body.logo-hidden .players-grid {
+        max-height: none;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
       }
-      .btn-plus {
-        font-size: 1rem;
+      .players-grid.single-col {
+        grid-template-columns: minmax(0, 340px);
+        justify-content: center;
+      }
+      .player-card,
+      body.multi-row .player-card {
+        padding: 12px;
+      }
+      .portrait-wrap {
+        flex: 0 0 auto;
+        aspect-ratio: 1 / 1.05;
+      }
+      .score-value,
+      body.multi-row .score-value {
+        font-size: 3rem;
+      }
+      .card-controls,
+      body.multi-row .card-controls {
+        height: 48px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Fullscreen Background Stack (positive z-indexes so custom image ALWAYS shows) -->
   <div class="bg-layer" aria-hidden="true"></div>
   <img id="customBgImage" class="bg-image" alt="" aria-hidden="true" />
   <div class="bg-scrim" aria-hidden="true"></div>
 
-  <!-- Top-Right Quick Edit Button -->
   <button id="openEditBtn" class="edit-trigger" type="button" aria-label="Abrir panel de edición">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="3"></circle>
@@ -1118,9 +1294,8 @@
     <span>Editar</span>
   </button>
 
-  <!-- Main Stage -->
   <main class="stage">
-    <h1 class="sr-only">El Chiringuito · Marcador interactivo de 5 jugadores</h1>
+    <h1 class="sr-only">El Chiringuito · Marcador interactivo de jugadores</h1>
 
     <header id="brandHeader" class="brand-header">
       <div class="brand-line" aria-hidden="true"></div>
@@ -1131,7 +1306,6 @@
     <section id="playersGrid" class="players-grid" aria-label="Tarjetas de jugadores"></section>
   </main>
 
-  <!-- Quick Edit Drawer -->
   <div id="drawerBackdrop" class="drawer-backdrop" aria-hidden="true"></div>
 
   <aside id="settingsDrawer" class="settings-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
@@ -1152,10 +1326,38 @@
     </header>
 
     <div class="drawer-body">
+      <div id="inAppWarning" class="inapp-warning" hidden>
+        Estás abriendo el enlace desde un navegador interno (WhatsApp, Instagram, etc.), que suele borrar los datos al cerrarse. Ábrelo en <strong>Safari</strong> o <strong>Chrome</strong> (y añádelo a pantalla de inicio) para que todo quede guardado siempre.
+      </div>
+
+      <!-- Player Count Config -->
+      <section aria-labelledby="countSectionLabel">
+        <h3 id="countSectionLabel" class="section-label">Número de jugadores</h3>
+        <div class="panel-box">
+          <div class="count-stepper-row">
+            <span style="font-size:13px;font-weight:600;color:var(--text-secondary);">Tarjetas visibles (1–10)</span>
+            <div class="count-stepper">
+              <button id="decreaseCountBtn" class="count-btn" type="button" aria-label="Quitar un jugador">−</button>
+              <span id="playerCountReadout" class="count-readout">5</span>
+              <button id="increaseCountBtn" class="count-btn" type="button" aria-label="Añadir un jugador">+</button>
+            </div>
+          </div>
+          <div id="countPresets" class="count-presets" aria-label="Accesos rápidos de número de jugadores">
+            <button class="preset-pill" type="button" data-count="2">2</button>
+            <button class="preset-pill" type="button" data-count="3">3</button>
+            <button class="preset-pill" type="button" data-count="4">4</button>
+            <button class="preset-pill" type="button" data-count="5">5</button>
+            <button class="preset-pill" type="button" data-count="6">6</button>
+            <button class="preset-pill" type="button" data-count="8">8</button>
+            <button class="preset-pill" type="button" data-count="10">10</button>
+          </div>
+        </div>
+      </section>
+
       <!-- Background & Display Settings -->
       <section aria-labelledby="bgSectionLabel">
         <h3 id="bgSectionLabel" class="section-label">Fondo y cabecera</h3>
-        <div class="bg-editor-panel">
+        <div class="panel-box">
           <div class="bg-editor-top">
             <div id="bgThumb" class="bg-thumb">Por defecto</div>
             <div class="bg-editor-actions">
@@ -1179,8 +1381,19 @@
 
       <!-- Players Config -->
       <section aria-labelledby="playersSectionLabel">
-        <h3 id="playersSectionLabel" class="section-label">Jugadores (5)</h3>
+        <h3 id="playersSectionLabel" class="section-label">Jugadores (<span id="playersCountLabel">5</span>)</h3>
         <div id="playersEditorList" class="players-editor-list"></div>
+      </section>
+
+      <!-- Backup / Transfer between iPad & Mobile -->
+      <section aria-labelledby="backupSectionLabel">
+        <h3 id="backupSectionLabel" class="section-label">Copia entre dispositivos</h3>
+        <div class="panel-box">
+          <div class="backup-row">
+            <button id="exportBackupBtn" class="btn-ghost" type="button">Exportar copia</button>
+            <button id="importBackupBtn" class="btn-ghost" type="button">Importar copia</button>
+          </div>
+        </div>
       </section>
     </div>
 
@@ -1195,11 +1408,10 @@
     </footer>
   </aside>
 
-  <!-- Hidden File Inputs -->
   <input id="bgFileInput" class="file-input-hidden" type="file" accept="image/*" />
   <input id="playerFileInput" class="file-input-hidden" type="file" accept="image/*" />
+  <input id="backupFileInput" class="file-input-hidden" type="file" accept="application/json,.json" />
 
-  <!-- Undo Toast -->
   <div id="toast" class="toast" role="status" aria-live="polite">
     <span id="toastMessage">Contadores reseteados a 0</span>
     <button id="toastUndoBtn" class="toast-undo" type="button" hidden>Deshacer</button>
@@ -1210,7 +1422,7 @@
       'use strict';
 
       /* =========================================
-         1. IPAD ZOOM & GESTURE PREVENTION
+         1. IPAD / MOBILE ZOOM & GESTURE GUARD
          ========================================= */
       document.addEventListener('dblclick', (e) => {
         if (!e.target.closest('input, textarea')) {
@@ -1222,14 +1434,33 @@
         document.addEventListener(evt, (e) => e.preventDefault(), { passive: false });
       });
 
+      // Detect ephemeral in-app browsers (WhatsApp, Instagram, FB, etc.)
+      const ua = navigator.userAgent || '';
+      const isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|WhatsApp|Snapchat|TikTok/i.test(ua);
+      if (isInAppBrowser) {
+        const warnEl = document.getElementById('inAppWarning');
+        if (warnEl) warnEl.hidden = false;
+      }
+
       /* =========================================
-         2. STATE & DEFAULT DATA
+         2. STATE & CONSTANTS
          ========================================= */
-      const DB_NAME = 'ChiringuitoScoreboardDB';
+      const MIN_PLAYERS = 1;
+      const MAX_PLAYERS = 10;
+
+      const DB_NAME = 'ChiringuitoScoreboardDB_v3';
       const DB_VERSION = 1;
-      const STORE_NAME = 'app_state';
-      const STATE_KEY = 'scoreboard_v2';
-      const LS_KEY = 'chiringuito_scoreboard_v2';
+      const MEDIA_STORE = 'media';
+
+      // Legacy v2 DB for seamless migration
+      const LEGACY_DB_NAME = 'ChiringuitoScoreboardDB';
+      const LEGACY_STORE = 'app_state';
+      const LEGACY_KEY = 'scoreboard_v2';
+      const LEGACY_LS_KEY = 'chiringuito_scoreboard_v2';
+
+      // Split synchronous localStorage keys (meta always <2KB, never fails on mobile!)
+      const LS_META_KEY = 'chiringuito_meta_v3';
+      const LS_MEDIA_MIRROR_KEY = 'chiringuito_media_v3';
 
       function createDefaultAvatarSvg(uid) {
         return `
@@ -1251,17 +1482,20 @@
         `;
       }
 
+      const createDefaultPlayers = () =>
+        Array.from({ length: MAX_PLAYERS }, (_, i) => ({
+          id: i,
+          name: `JUGADOR ${i + 1}`,
+          score: 0,
+          photo: null
+        }));
+
       const createDefaultState = () => ({
+        playerCount: 5,
         background: null,
         bgDim: 22,
         showLogo: true,
-        players: [
-          { id: 0, name: 'JUGADOR 1', score: 0, photo: null },
-          { id: 1, name: 'JUGADOR 2', score: 0, photo: null },
-          { id: 2, name: 'JUGADOR 3', score: 0, photo: null },
-          { id: 3, name: 'JUGADOR 4', score: 0, photo: null },
-          { id: 4, name: 'JUGADOR 5', score: 0, photo: null }
-        ]
+        players: createDefaultPlayers()
       });
 
       let state = createDefaultState();
@@ -1272,7 +1506,7 @@
       let saveStatusTimer = null;
 
       /* =========================================
-         3. ROCK-SOLID PERSISTENCE (IDB + LS)
+         3. BULLETPROOF MOBILE + IPAD PERSISTENCE
          ========================================= */
       function requestPersistentStorage() {
         if (navigator.storage && typeof navigator.storage.persist === 'function') {
@@ -1280,7 +1514,7 @@
         }
       }
 
-      function openDatabase() {
+      function openMediaDb() {
         return new Promise((resolve) => {
           if (!('indexedDB' in window)) {
             resolve(null);
@@ -1290,11 +1524,17 @@
             const req = indexedDB.open(DB_NAME, DB_VERSION);
             req.onupgradeneeded = (e) => {
               const db = e.target.result;
-              if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME);
+              if (!db.objectStoreNames.contains(MEDIA_STORE)) {
+                db.createObjectStore(MEDIA_STORE);
               }
             };
-            req.onsuccess = (e) => resolve(e.target.result);
+            req.onsuccess = (e) => {
+              const db = e.target.result;
+              // iOS Safari closes idle IndexedDB connections when backgrounded
+              db.onclose = () => { dbInstance = null; };
+              db.onversionchange = () => { db.close(); dbInstance = null; };
+              resolve(db);
+            };
             req.onerror = () => resolve(null);
           } catch {
             resolve(null);
@@ -1302,48 +1542,116 @@
         });
       }
 
-      async function loadState() {
-        requestPersistentStorage();
-        dbInstance = await openDatabase();
+      async function ensureMediaDb() {
+        if (dbInstance) return dbInstance;
+        dbInstance = await openMediaDb();
+        return dbInstance;
+      }
 
-        if (dbInstance) {
-          const fromIdb = await new Promise((resolve) => {
+      async function idbPutMedia(key, value) {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const db = await ensureMediaDb();
+          if (!db) return false;
+          try {
+            await new Promise((resolve, reject) => {
+              const tx = db.transaction(MEDIA_STORE, 'readwrite');
+              const store = tx.objectStore(MEDIA_STORE);
+              if (value == null) {
+                store.delete(key);
+              } else {
+                store.put(value, key);
+              }
+              tx.oncomplete = () => resolve(true);
+              tx.onerror = () => reject(tx.error);
+              tx.onabort = () => reject(tx.error || new Error('aborted'));
+            });
+            return true;
+          } catch {
+            // Reopen once in case iOS Safari closed the connection in background
+            dbInstance = null;
+          }
+        }
+        return false;
+      }
+
+      async function idbGetAllMedia() {
+        const db = await ensureMediaDb();
+        if (!db) return {};
+        return new Promise((resolve) => {
+          const result = {};
+          try {
+            const tx = db.transaction(MEDIA_STORE, 'readonly');
+            const store = tx.objectStore(MEDIA_STORE);
+            const req = store.openCursor();
+            req.onsuccess = (e) => {
+              const cursor = e.target.result;
+              if (cursor) {
+                result[cursor.key] = cursor.value;
+                cursor.continue();
+              } else {
+                resolve(result);
+              }
+            };
+            req.onerror = () => resolve(result);
+          } catch {
+            resolve(result);
+          }
+        });
+      }
+
+      async function loadLegacyV2() {
+        // Check legacy v2 IndexedDB or localStorage so existing setups carry over smoothly
+        if ('indexedDB' in window) {
+          const fromLegacyIdb = await new Promise((resolve) => {
             try {
-              const tx = dbInstance.transaction(STORE_NAME, 'readonly');
-              const req = tx.objectStore(STORE_NAME).get(STATE_KEY);
-              req.onsuccess = () => resolve(req.result || null);
+              const req = indexedDB.open(LEGACY_DB_NAME, 1);
+              req.onupgradeneeded = () => { /* do not create new data */ };
+              req.onsuccess = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(LEGACY_STORE)) {
+                  db.close();
+                  resolve(null);
+                  return;
+                }
+                const tx = db.transaction(LEGACY_STORE, 'readonly');
+                const getReq = tx.objectStore(LEGACY_STORE).get(LEGACY_KEY);
+                getReq.onsuccess = () => { db.close(); resolve(getReq.result || null); };
+                getReq.onerror = () => { db.close(); resolve(null); };
+              };
               req.onerror = () => resolve(null);
             } catch {
               resolve(null);
             }
           });
-          if (fromIdb && Array.isArray(fromIdb.players) && fromIdb.players.length === 5) {
-            return normalizeState(fromIdb);
+          if (fromLegacyIdb && Array.isArray(fromLegacyIdb.players)) {
+            return fromLegacyIdb;
           }
         }
-
         try {
-          const raw = localStorage.getItem(LS_KEY);
+          const raw = localStorage.getItem(LEGACY_LS_KEY);
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (parsed && Array.isArray(parsed.players) && parsed.players.length === 5) {
-              return normalizeState(parsed);
-            }
+            if (parsed && Array.isArray(parsed.players)) return parsed;
           }
         } catch {}
-
-        return createDefaultState();
+        return null;
       }
 
       function normalizeState(raw) {
         const defaults = createDefaultState();
+        const count = Number(raw.playerCount);
         const dimVal = Number(raw.bgDim);
+        const rawPlayers = Array.isArray(raw.players) ? raw.players : [];
+
         return {
+          playerCount: Number.isFinite(count)
+            ? Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, Math.round(count)))
+            : 5,
           background: typeof raw.background === 'string' ? raw.background : null,
           bgDim: Number.isFinite(dimVal) ? Math.min(75, Math.max(0, Math.round(dimVal))) : 22,
           showLogo: typeof raw.showLogo === 'boolean' ? raw.showLogo : true,
           players: defaults.players.map((def, idx) => {
-            const p = raw.players[idx] || {};
+            const p = rawPlayers[idx] || {};
             return {
               id: idx,
               name: typeof p.name === 'string' ? p.name : def.name,
@@ -1354,48 +1662,93 @@
         };
       }
 
-      function persistState() {
-        updateSaveStatus('Guardando...');
+      async function loadState() {
+        requestPersistentStorage();
+        let meta = null;
 
-        // 1. Primary: IndexedDB (handles high-res photos & background effortlessly)
-        if (dbInstance) {
-          try {
-            const tx = dbInstance.transaction(STORE_NAME, 'readwrite');
-            tx.objectStore(STORE_NAME).put(state, STATE_KEY);
-            tx.oncomplete = () => updateSaveStatus('Guardado permanente');
-            tx.onerror = () => saveToLocalStorage();
-          } catch {
-            saveToLocalStorage();
-          }
-        } else {
-          saveToLocalStorage();
-        }
-
-        // 2. Mirror to localStorage (full state if it fits, otherwise lightweight metadata)
-        saveToLocalStorage(true);
-      }
-
-      function saveToLocalStorage(silent = false) {
+        // 1. Read fast synchronous metadata from localStorage
         try {
-          localStorage.setItem(LS_KEY, JSON.stringify(state));
-          if (!silent) updateSaveStatus('Guardado local');
+          const rawMeta = localStorage.getItem(LS_META_KEY);
+          if (rawMeta) meta = JSON.parse(rawMeta);
+        } catch {}
+
+        // 2. Read heavy media from IndexedDB + localStorage mirror
+        const idbMedia = await idbGetAllMedia();
+        let lsMedia = {};
+        try {
+          const rawLsMedia = localStorage.getItem(LS_MEDIA_MIRROR_KEY);
+          if (rawLsMedia) lsMedia = JSON.parse(rawLsMedia) || {};
+        } catch {}
+
+        // 3. If v3 has no saved metadata yet, attempt seamless migration from v2
+        if (!meta) {
+          const legacy = await loadLegacyV2();
+          if (legacy) {
+            const migrated = normalizeState(legacy);
+            state = migrated;
+            persistMetaSync();
+            await persistAllMedia();
+            return migrated;
+          }
+        }
+
+        const base = normalizeState(meta || {});
+        base.background = idbMedia.background || lsMedia.background || null;
+        for (let i = 0; i < MAX_PLAYERS; i++) {
+          const key = `photo_${i}`;
+          base.players[i].photo = idbMedia[key] || lsMedia[key] || null;
+        }
+        return base;
+      }
+
+      /* Fast synchronous save for names, scores, count, toggles (0.1ms, never fails on mobile) */
+      function persistMetaSync() {
+        try {
+          const metaPayload = {
+            playerCount: state.playerCount,
+            bgDim: state.bgDim,
+            showLogo: state.showLogo,
+            players: state.players.map(({ id, name, score }) => ({ id, name, score }))
+          };
+          localStorage.setItem(LS_META_KEY, JSON.stringify(metaPayload));
+          updateSaveStatus('Guardado en el dispositivo');
         } catch {
-          try {
-            const lightPayload = {
-              background: null,
-              bgDim: state.bgDim,
-              showLogo: state.showLogo,
-              players: state.players.map(({ id, name, score }) => ({ id, name, score, photo: null }))
-            };
-            localStorage.setItem(LS_KEY, JSON.stringify(lightPayload));
-          } catch {}
+          updateSaveStatus('Almacenamiento restringido');
         }
       }
 
-      // Ensure final flush when user closes or backgrounds Safari on iPad
-      window.addEventListener('pagehide', () => persistState());
+      /* Save single media asset to IndexedDB + localStorage mirror */
+      async function persistMediaKey(key, dataUrl) {
+        updateSaveStatus('Guardando imagen...');
+        const savedIdb = await idbPutMedia(key, dataUrl);
+        mirrorMediaToLocalStorage();
+        updateSaveStatus(savedIdb ? 'Imagen guardada' : 'Guardado local');
+      }
+
+      async function persistAllMedia() {
+        await idbPutMedia('background', state.background);
+        for (let i = 0; i < MAX_PLAYERS; i++) {
+          await idbPutMedia(`photo_${i}`, state.players[i].photo);
+        }
+        mirrorMediaToLocalStorage();
+      }
+
+      function mirrorMediaToLocalStorage() {
+        try {
+          const bundle = {};
+          if (state.background) bundle.background = state.background;
+          for (let i = 0; i < MAX_PLAYERS; i++) {
+            if (state.players[i].photo) bundle[`photo_${i}`] = state.players[i].photo;
+          }
+          localStorage.setItem(LS_MEDIA_MIRROR_KEY, JSON.stringify(bundle));
+        } catch {
+          // Quota exceeded in localStorage — IndexedDB still holds full media safely
+        }
+      }
+
+      window.addEventListener('pagehide', () => persistMetaSync());
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') persistState();
+        if (document.visibilityState === 'hidden') persistMetaSync();
       });
 
       function updateSaveStatus(text) {
@@ -1411,7 +1764,7 @@
       }
 
       /* =========================================
-         4. IMAGE OPTIMIZATION FOR IPAD SAFARI
+         4. IMAGE OPTIMIZATION FOR IPAD & MOBILE
          ========================================= */
       function processImageFile(file, maxDimension, quality) {
         return new Promise((resolve, reject) => {
@@ -1440,7 +1793,7 @@
               ctx.imageSmoothingQuality = 'high';
               ctx.drawImage(img, 0, 0, w, h);
 
-              const outputType = file.type === 'image/png' && w <= 720 ? 'image/png' : 'image/jpeg';
+              const outputType = file.type === 'image/png' && w <= 540 ? 'image/png' : 'image/jpeg';
               const dataUrl = canvas.toDataURL(outputType, quality);
               URL.revokeObjectURL(objectUrl);
               resolve(dataUrl);
@@ -1463,7 +1816,7 @@
       }
 
       /* =========================================
-         5. DOM REFERENCES & BUILDERS
+         5. DOM REFERENCES & DYNAMIC BUILDERS
          ========================================= */
       const playersGrid = document.getElementById('playersGrid');
       const customBgImage = document.getElementById('customBgImage');
@@ -1473,6 +1826,11 @@
       const bgDimSlider = document.getElementById('bgDimSlider');
       const bgDimValue = document.getElementById('bgDimValue');
       const showLogoToggle = document.getElementById('showLogoToggle');
+      const decreaseCountBtn = document.getElementById('decreaseCountBtn');
+      const increaseCountBtn = document.getElementById('increaseCountBtn');
+      const playerCountReadout = document.getElementById('playerCountReadout');
+      const playersCountLabel = document.getElementById('playersCountLabel');
+      const countPresets = document.getElementById('countPresets');
       const playersEditorList = document.getElementById('playersEditorList');
       const openEditBtn = document.getElementById('openEditBtn');
       const closeEditBtn = document.getElementById('closeEditBtn');
@@ -1481,6 +1839,9 @@
       const uploadBgBtn = document.getElementById('uploadBgBtn');
       const bgFileInput = document.getElementById('bgFileInput');
       const playerFileInput = document.getElementById('playerFileInput');
+      const exportBackupBtn = document.getElementById('exportBackupBtn');
+      const importBackupBtn = document.getElementById('importBackupBtn');
+      const backupFileInput = document.getElementById('backupFileInput');
       const resetAllBtn = document.getElementById('resetAllBtn');
       const toastEl = document.getElementById('toast');
       const toastMessageEl = document.getElementById('toastMessage');
@@ -1489,11 +1850,33 @@
       const cardRefs = [];
       const editorRefs = [];
 
+      function applyGridGeometry() {
+        const count = state.playerCount;
+        const isMultiRow = count > 6;
+        let cols = count;
+        let maxW = 1560;
+
+        if (count === 1) { cols = 1; maxW = 380; }
+        else if (count === 2) { cols = 2; maxW = 760; }
+        else if (count === 3) { cols = 3; maxW = 1080; }
+        else if (count === 4) { cols = 4; maxW = 1360; }
+        else if (count === 5) { cols = 5; maxW = 1560; }
+        else if (count === 6) { cols = 6; maxW = 1640; }
+        else if (count <= 8) { cols = 4; maxW = 1480; }
+        else { cols = 5; maxW = 1580; }
+
+        document.documentElement.style.setProperty('--grid-cols', String(cols));
+        document.documentElement.style.setProperty('--grid-max-width', `${maxW}px`);
+        document.body.classList.toggle('multi-row', isMultiRow);
+        playersGrid.classList.toggle('single-col', count === 1);
+      }
+
       function buildBoardCards() {
+        applyGridGeometry();
         playersGrid.innerHTML = '';
         cardRefs.length = 0;
 
-        state.players.forEach((player, idx) => {
+        for (let idx = 0; idx < state.playerCount; idx++) {
           const card = document.createElement('article');
           card.className = 'player-card';
           card.dataset.playerId = String(idx);
@@ -1539,14 +1922,14 @@
             minusBtn,
             bumpTimer: null
           });
-        });
+        }
       }
 
       function buildEditorRows() {
         playersEditorList.innerHTML = '';
         editorRefs.length = 0;
 
-        state.players.forEach((player, idx) => {
+        for (let idx = 0; idx < state.playerCount; idx++) {
           const row = document.createElement('div');
           row.className = 'player-editor-row';
 
@@ -1589,16 +1972,16 @@
           avatarBtn.addEventListener('click', triggerPhotoPicker);
           uploadPhotoBtn.addEventListener('click', triggerPhotoPicker);
 
-          clearPhotoBtn.addEventListener('click', () => {
+          clearPhotoBtn.addEventListener('click', async () => {
             state.players[idx].photo = null;
             syncPlayerUI(idx);
-            persistState();
+            await persistMediaKey(`photo_${idx}`, null);
           });
 
           nameInput.addEventListener('input', (e) => {
             state.players[idx].name = e.target.value;
             syncPlayerUI(idx, { skipInputValue: true });
-            persistState();
+            persistMetaSync();
           });
 
           resetOneBtn.addEventListener('click', () => {
@@ -1606,11 +1989,11 @@
             const prevScore = state.players[idx].score;
             state.players[idx].score = 0;
             syncPlayerUI(idx);
-            persistState();
+            persistMetaSync();
             showToast(`Contador de ${getDisplayName(idx)} a 0`, () => {
               state.players[idx].score = prevScore;
               syncPlayerUI(idx);
-              persistState();
+              persistMetaSync();
             });
           });
 
@@ -1623,7 +2006,7 @@
             resetOneBtn,
             scorePill
           });
-        });
+        }
       }
 
       function bindInstantAction(button, handler) {
@@ -1662,6 +2045,27 @@
       function getDisplayName(idx) {
         const trimmed = (state.players[idx].name || '').trim();
         return trimmed ? trimmed.toUpperCase() : `JUGADOR ${idx + 1}`;
+      }
+
+      function syncCountControlsUI() {
+        playerCountReadout.textContent = String(state.playerCount);
+        playersCountLabel.textContent = String(state.playerCount);
+        decreaseCountBtn.disabled = state.playerCount <= MIN_PLAYERS;
+        increaseCountBtn.disabled = state.playerCount >= MAX_PLAYERS;
+
+        countPresets.querySelectorAll('.preset-pill').forEach((btn) => {
+          btn.classList.toggle('active', Number(btn.dataset.count) === state.playerCount);
+        });
+      }
+
+      function setPlayerCount(newCount) {
+        const clamped = Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, Math.round(newCount)));
+        if (clamped === state.playerCount) return;
+        state.playerCount = clamped;
+        buildBoardCards();
+        buildEditorRows();
+        syncAllUI();
+        persistMetaSync();
       }
 
       function syncDisplaySettingsUI() {
@@ -1739,8 +2143,9 @@
       }
 
       function syncAllUI() {
+        syncCountControlsUI();
         syncDisplaySettingsUI();
-        for (let i = 0; i < state.players.length; i++) {
+        for (let i = 0; i < state.playerCount; i++) {
           syncPlayerUI(i);
         }
       }
@@ -1752,7 +2157,7 @@
 
         player.score = nextScore;
         syncPlayerUI(idx);
-        persistState();
+        persistMetaSync();
 
         const ref = cardRefs[idx];
         if (!ref) return;
@@ -1782,7 +2187,7 @@
       }
 
       /* =========================================
-         7. DRAWER, SLIDERS & TOAST
+         7. DRAWER, COUNT, SLIDERS & BACKUP
          ========================================= */
       function openDrawer() {
         drawerBackdrop.classList.add('open');
@@ -1834,30 +2239,39 @@
         }
       });
 
+      decreaseCountBtn.addEventListener('click', () => setPlayerCount(state.playerCount - 1));
+      increaseCountBtn.addEventListener('click', () => setPlayerCount(state.playerCount + 1));
+
+      countPresets.addEventListener('click', (e) => {
+        const pill = e.target.closest('.preset-pill');
+        if (!pill) return;
+        setPlayerCount(Number(pill.dataset.count));
+      });
+
       bgDimSlider.addEventListener('input', (e) => {
         state.bgDim = Number(e.target.value);
         syncDisplaySettingsUI();
-        persistState();
+        persistMetaSync();
       });
 
       showLogoToggle.addEventListener('change', (e) => {
         state.showLogo = e.target.checked;
         syncDisplaySettingsUI();
-        persistState();
+        persistMetaSync();
       });
 
       /* =========================================
-         8. FILE UPLOADS & GLOBAL RESET
+         8. FILE UPLOADS, BACKUP & GLOBAL RESET
          ========================================= */
       uploadBgBtn.addEventListener('click', () => {
         bgFileInput.value = '';
         bgFileInput.click();
       });
 
-      removeBgBtn.addEventListener('click', () => {
+      removeBgBtn.addEventListener('click', async () => {
         state.background = null;
         syncDisplaySettingsUI();
-        persistState();
+        await persistMediaKey('background', null);
       });
 
       bgFileInput.addEventListener('change', async (e) => {
@@ -1865,11 +2279,11 @@
         if (!file) return;
         try {
           updateSaveStatus('Procesando fondo...');
-          const optimized = await processImageFile(file, 2048, 0.86);
+          const optimized = await processImageFile(file, 1600, 0.84);
           state.background = optimized;
           syncDisplaySettingsUI();
-          persistState();
-          showToast('Fondo actualizado');
+          await persistMediaKey('background', optimized);
+          showToast('Fondo guardado');
         } catch {
           showToast('No se pudo cargar la imagen de fondo');
         }
@@ -1881,30 +2295,73 @@
         if (!file || idx === null || !state.players[idx]) return;
         try {
           updateSaveStatus('Procesando foto...');
-          const optimized = await processImageFile(file, 720, 0.86);
+          const optimized = await processImageFile(file, 540, 0.84);
           state.players[idx].photo = optimized;
           syncPlayerUI(idx);
-          persistState();
+          await persistMediaKey(`photo_${idx}`, optimized);
         } catch {
           showToast('No se pudo cargar la foto del jugador');
         }
       });
 
+      exportBackupBtn.addEventListener('click', () => {
+        try {
+          const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'marcador-chiringuito-copia.json';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          showToast('Copia exportada');
+        } catch {
+          showToast('No se pudo exportar la copia');
+        }
+      });
+
+      importBackupBtn.addEventListener('click', () => {
+        backupFileInput.value = '';
+        backupFileInput.click();
+      });
+
+      backupFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          state = normalizeState(parsed);
+          buildBoardCards();
+          buildEditorRows();
+          syncAllUI();
+          persistMetaSync();
+          await persistAllMedia();
+          showToast('Copia restaurada');
+        } catch {
+          showToast('Archivo de copia no válido');
+        }
+      });
+
       resetAllBtn.addEventListener('click', () => {
-        const hasAnyScore = state.players.some((p) => p.score > 0);
+        const visiblePlayers = state.players.slice(0, state.playerCount);
+        const hasAnyScore = visiblePlayers.some((p) => p.score > 0);
         if (!hasAnyScore) {
           showToast('Todos los contadores ya están en 0');
           return;
         }
         const previousScores = state.players.map((p) => p.score);
-        state.players.forEach((p) => { p.score = 0; });
+        for (let i = 0; i < state.playerCount; i++) {
+          state.players[i].score = 0;
+        }
         syncAllUI();
-        persistState();
+        persistMetaSync();
 
-        showToast('Todos los contadores reseteados a 0', () => {
+        showToast('Contadores reseteados a 0', () => {
           state.players.forEach((p, idx) => { p.score = previousScores[idx]; });
           syncAllUI();
-          persistState();
+          persistMetaSync();
         });
       });
 
