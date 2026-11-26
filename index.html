@@ -962,13 +962,79 @@
 
     .player-editor-row {
       display: grid;
-      grid-template-columns: 54px minmax(0, 1fr);
-      gap: 12px;
-      padding: 12px;
+      grid-template-columns: 30px 54px minmax(0, 1fr);
+      gap: 10px;
+      padding: 11px 12px 11px 9px;
       border-radius: 16px;
       background: rgba(13, 43, 87, 0.38);
       border: 1px solid rgba(41, 148, 242, 0.22);
       align-items: center;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .player-editor-row.just-moved {
+      animation: rowMovedFlash 0.42s ease;
+    }
+
+    @keyframes rowMovedFlash {
+      0% {
+        border-color: rgba(255, 226, 122, 0.9);
+        background: rgba(242, 180, 34, 0.16);
+      }
+      100% {
+        border-color: rgba(41, 148, 242, 0.22);
+        background: rgba(13, 43, 87, 0.38);
+      }
+    }
+
+    .editor-order-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2px;
+      height: 66px;
+    }
+
+    .order-index {
+      font-size: 11px;
+      font-weight: 900;
+      font-style: italic;
+      font-variant-numeric: tabular-nums;
+      color: var(--gold-light);
+      line-height: 1;
+    }
+
+    .btn-order {
+      width: 28px;
+      height: 24px;
+      padding: 0;
+      border-radius: 7px;
+      border: 1px solid rgba(41, 148, 242, 0.32);
+      background: rgba(4, 13, 29, 0.62);
+      color: #dbeafe;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease, opacity 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-order:hover:not(:disabled) {
+      background: rgba(21, 101, 192, 0.72);
+      border-color: rgba(242, 180, 34, 0.55);
+      color: #ffffff;
+    }
+
+    .btn-order:active:not(:disabled) {
+      transform: scale(0.9);
+      background: rgba(242, 180, 34, 0.3);
+    }
+
+    .btn-order:disabled {
+      opacity: 0.22;
+      cursor: default;
     }
 
     .editor-avatar-btn {
@@ -1934,6 +2000,37 @@
         }
       }
 
+      let mediaWriteQueue = Promise.resolve();
+
+      function movePlayer(fromIdx, toIdx) {
+        if (toIdx < 0 || toIdx >= state.playerCount || fromIdx === toIdx) return;
+
+        const temp = state.players[fromIdx];
+        state.players[fromIdx] = state.players[toIdx];
+        state.players[toIdx] = temp;
+        state.players[fromIdx].id = fromIdx;
+        state.players[toIdx].id = toIdx;
+
+        syncPlayerUI(fromIdx);
+        syncPlayerUI(toIdx);
+        persistMetaSync();
+
+        const targetRow = editorRefs[toIdx] && editorRefs[toIdx].row;
+        if (targetRow) {
+          targetRow.classList.remove('just-moved');
+          void targetRow.offsetWidth;
+          targetRow.classList.add('just-moved');
+        }
+
+        const photoFrom = state.players[fromIdx].photo;
+        const photoTo = state.players[toIdx].photo;
+        mediaWriteQueue = mediaWriteQueue.then(async () => {
+          await idbPutMedia(`photo_${fromIdx}`, photoFrom);
+          await idbPutMedia(`photo_${toIdx}`, photoTo);
+          mirrorMediaToLocalStorage();
+        });
+      }
+
       function buildEditorRows() {
         playersEditorList.innerHTML = '';
         editorRefs.length = 0;
@@ -1943,6 +2040,15 @@
           row.className = 'player-editor-row';
 
           row.innerHTML = `
+            <div class="editor-order-col">
+              <button class="btn-order move-up-btn" type="button" aria-label="Mover posición ${idx + 1} hacia arriba" ${idx === 0 ? 'disabled' : ''}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>
+              </button>
+              <span class="order-index">${idx + 1}</span>
+              <button class="btn-order move-down-btn" type="button" aria-label="Mover posición ${idx + 1} hacia abajo" ${idx === state.playerCount - 1 ? 'disabled' : ''}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
             <button class="editor-avatar-btn" type="button" aria-label="Cambiar foto del jugador ${idx + 1}">
               <img alt="" hidden />
               <div class="editor-avatar-fallback" style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;">${createDefaultAvatarSvg('edit_' + idx)}</div>
@@ -1963,6 +2069,8 @@
             </div>
           `;
 
+          const moveUpBtn = row.querySelector('.move-up-btn');
+          const moveDownBtn = row.querySelector('.move-down-btn');
           const avatarBtn = row.querySelector('.editor-avatar-btn');
           const avatarImg = avatarBtn.querySelector('img');
           const avatarFallback = avatarBtn.querySelector('.editor-avatar-fallback');
@@ -1971,6 +2079,9 @@
           const clearPhotoBtn = row.querySelector('.clear-photo-btn');
           const resetOneBtn = row.querySelector('.reset-one');
           const scorePill = row.querySelector('.score-pill');
+
+          moveUpBtn.addEventListener('click', () => movePlayer(idx, idx - 1));
+          moveDownBtn.addEventListener('click', () => movePlayer(idx, idx + 1));
 
           const triggerPhotoPicker = () => {
             activePhotoUploadIndex = idx;
@@ -2008,6 +2119,7 @@
 
           playersEditorList.appendChild(row);
           editorRefs.push({
+            row,
             avatarImg,
             avatarFallback,
             nameInput,
